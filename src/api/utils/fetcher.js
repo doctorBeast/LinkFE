@@ -29,8 +29,6 @@ const getHeaders = (headers = {}) => {
   });
 
   httpHeaders.append("Content-Type", "application/json");
-  httpHeaders.append("Source", "CUSTOMER");
-
   return httpHeaders;
 };
 

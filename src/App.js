@@ -4,6 +4,7 @@ import LoginPage from "./root/LoginPage";
 import SignUpPage from "./root/SignUpPage";
 import ChatPage from "./root/ChatPage";
 import { Switch, BrowserRouter, Route, Redirect } from "react-router-dom";
+import { PrivateRoute } from "./common/router";
 
 function App() {
   return (
@@ -31,9 +32,9 @@ function App() {
             <Route path="/signup">
               <SignUpPage />
             </Route>
-            <Route path="/user/:userId">
+            <PrivateRoute path="/user/:userId">
               <ChatPage />
-            </Route>
+            </PrivateRoute>
             <Route path="/">
               <Redirect to="/login" />
             </Route>

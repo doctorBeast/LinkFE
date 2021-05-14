@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { List, ListItem } from "@material-ui/core";
 import {
   Box1,
@@ -7,8 +7,11 @@ import {
   Titlediv,
   LastMessageDiv,
 } from "./styles";
+import { ChatPageContext } from "../container/index";
 
 const ChatsSidebar = () => {
+  const value = useContext(ChatPageContext);
+
   const chatsList = [
     {
       title: "ABC",
@@ -40,12 +43,22 @@ const ChatsSidebar = () => {
       <div>
         Here will come the list of chats
         <List>
-          {chatsList.map((chat) => {
+          {value.chatSessions.map((chat, i) => {
+            let chatTitle = "";
+            if (chat.type === "DM") {
+              chat.members.forEach((element) => {
+                if (element.id !== value.user.id) {
+                  chatTitle = element.name;
+                }
+              });
+            } else {
+              chatTitle = "GROUP";
+            }
             return (
-              <Box1>
-                <Titlediv>{chat.title}</Titlediv>
+              <Box1 key={i} onClick={() => value.selectChatSession(i)}>
+                <Titlediv>{chatTitle}</Titlediv>
                 <LastMessageDiv>
-                  <label>{chat.last_message}</label>
+                  <label>{chat.messages[0].data}</label>
                 </LastMessageDiv>
               </Box1>
             );

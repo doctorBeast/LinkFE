@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { Redirect } from "react-router-dom";
+import makeApiCall from "../../../../api/utils/fetcher";
 
 const Container = () => {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -11,8 +12,31 @@ const Container = () => {
     // api will return a token
     // set token to session storage
     // if all successfull move to Chat Page for a user.
-    localStorage.setItem("Authentication-Token", "ABCDEFGH");
-    setLoggedIn(true);
+    const options = {
+      methodType: "POST",
+      endPoint: "login",
+      body: {
+        email: values.email,
+        password: values.password,
+      },
+      params: {
+        include_auth_token: true,
+      },
+    };
+    makeApiCall(options).then((resp) => {
+      console.log(resp);
+      if (resp[0] == null) {
+        localStorage.setItem(
+          "Authentication-Token",
+          resp[1].response.user.authentication_token
+        );
+        setLoggedIn(true);
+      } else {
+        // TODO: What happens when credentials do not match
+        console.log("Error is Thrown");
+        throw "Error";
+      }
+    });
   };
 
   if (loggedIn) {
