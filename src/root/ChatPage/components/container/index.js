@@ -2,7 +2,8 @@ import React, { createContext } from "react";
 import ChatsSidebar from "../chatsSidebar/index";
 import ChatSessionView from "../chatSessionView";
 import { Box1, VerticalBar } from "./styles";
-import makeApiCall from "../../../../api/utils/fetcher";
+import makeApiCall, { API_URL } from "../../../../api/utils/fetcher";
+import socketIOClient from "socket.io-client";
 
 export const ChatPageContext = createContext({});
 class Container extends React.Component {
@@ -65,6 +66,43 @@ class Container extends React.Component {
     };
   }
 
+  receivedMessage = ({ chat_session, message }) => {
+    const { chatSessions } = this.state;
+    let temp;
+    chatSessions.every((chat, i) => {
+      if (chat.id === chat_session) {
+        temp = i;
+        return false;
+      }
+      return true;
+    });
+    console.log("temp", temp);
+    if (temp !== undefined) {
+      let chatSession = chatSessions.splice(temp, 1)[0];
+      console.log("Chat Session", chatSession);
+      chatSession.messages.unshift(message);
+      chatSessions.unshift(chatSession);
+      console.log("ChatSession", chatSession);
+      this.setState({
+        chatSessions: chatSessions,
+        selectedChatSessionIndex: 0,
+      });
+    }
+  };
+
+  createSocket = () => {
+    const { user } = this.state;
+    const socket = socketIOClient(API_URL);
+    socket.on("receive message", (data) => {
+      console.log("Received Data", data);
+      this.receivedMessage(data);
+    });
+
+    socket.on("connect", () => {
+      socket.emit("is online", { user: user.id });
+    });
+  };
+
   componentDidMount() {
     // make all the api call
     // get token from localStorage
@@ -79,7 +117,7 @@ class Container extends React.Component {
     };
     makeApiCall(optionsForUser).then((resp) => {
       if (resp[0] == null) {
-        this.setState({ user: resp[1] });
+        this.setState({ user: resp[1] }, () => this.createSocket());
       } else {
         console.log("Error is Thrown while Fetching User details");
         this.setState({ error: true });
@@ -88,9 +126,7 @@ class Container extends React.Component {
     });
     const optionsForChatSession = {
       methodType: "GET",
-      endPoint: false
-        ? "chat-session/6096cfb52993ca312126fbb2"
-        : "chat-session/",
+      endPoint: "chat-session/",
       headers: {
         "Authentication-Token": token,
       },

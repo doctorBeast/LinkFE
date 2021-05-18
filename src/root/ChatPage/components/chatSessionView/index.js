@@ -3,6 +3,11 @@ import {
   ChatSessionHeader,
   MessageDisplayBox,
   ChatSessionFooter,
+  TextBox,
+  TextBoxContainer,
+  TitleLabel,
+  MsgLabel,
+  DateLabel,
 } from "./styles";
 import { TextareaAutosize, Button } from "@material-ui/core";
 import { ChatPageContext } from "../container";
@@ -15,32 +20,65 @@ const ChatSessionView = () => {
   const chatSessionMessages =
     value.chatSessions[value.selectedChatSessionIndex]?.messages;
 
+  const onTextSubmit = () => {
+    value.sendNewMsg(inputText);
+    setInputText("");
+  };
+
+  const getChatTitle = () => {
+    const chat = value.chatSessions[value.selectedChatSessionIndex];
+    let chatTitle = "Chat Title";
+    if (chat.type === "DM") {
+      chat.members.forEach((element) => {
+        if (element.id !== value.user.id) {
+          chatTitle = element.name;
+        }
+      });
+    } else {
+      chatTitle = "GROUP";
+    }
+    return chatTitle;
+  };
+
+  const formatAMPM = (strdate) => {
+    const date = new Date(strdate);
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var ampm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    var strTime = hours + ":" + minutes + " " + ampm;
+    return strTime;
+  };
+
   return (
-    <div style={{ flex: 6, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        flex: 6,
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+      }}
+    >
       {value.selectedChatSessionIndex != null ? (
         <>
           <ChatSessionHeader>
-            This is the header for Chat Session
+            <TitleLabel>{getChatTitle()}</TitleLabel>
           </ChatSessionHeader>
           <MessageDisplayBox>
-            This is the message display box
             {chatSessionMessages.map((msg, index) => {
               const msgAlign =
                 msg.creator.id === value.user.id ? "right" : "left";
+              const msgDate = new Date(msg.created_date);
               return (
-                <div
-                  style={{
-                    textAlign: msgAlign,
-                    width: "100%",
-                    marginBottom: "10px",
-                    border: "4px solid blue",
-                  }}
-                  key={index}
-                >
-                  <div style={{ border: "2px solid red" }}>
-                    <label>{msg.data}</label>
-                  </div>
-                </div>
+                <TextBoxContainer msgAlign={msgAlign} key={index}>
+                  <TextBox>
+                    <MsgLabel>{msg.data}</MsgLabel>
+                    <br />
+                    <DateLabel>{formatAMPM(msg.created_date)}</DateLabel>
+                  </TextBox>
+                </TextBoxContainer>
               );
             })}
           </MessageDisplayBox>
@@ -52,9 +90,7 @@ const ChatSessionView = () => {
                 rowsMax={4}
                 fullWidth
                 aria-label="maximum height"
-                placeholder="Maximum 4 rows"
-                defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-      ut labore et dolore magna aliqua."
+                placeholder="Type in Here"
                 value={inputText}
                 onChange={(e) => {
                   setInputText(e.target.value);
@@ -62,10 +98,7 @@ const ChatSessionView = () => {
               />
             </div>
             <div style={{ flex: 1, marginLeft: "10px" }}>
-              <Button
-                variant="contained"
-                onClick={() => value.sendNewMsg(inputText)}
-              >
+              <Button variant="contained" onClick={onTextSubmit}>
                 Send
               </Button>
             </div>
